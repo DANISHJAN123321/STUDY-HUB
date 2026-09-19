@@ -2,7 +2,7 @@ import streamlit as st
 from google import genai
 import numpy as np
 import pandas as pd
-import time
+import math
 import random
 
 # Page Configuration
@@ -12,33 +12,41 @@ st.set_page_config(
     layout="wide"
 )
 
-# Vibrant Colorful CSS Theme
+# High-Contrast Professional & Vibrant CSS Theme
 st.markdown("""
 <style>
-    .main {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+    .stApp {
+        background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
         color: #f8fafc;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
         color: #38bdf8 !important;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    p, span, label, .stMarkdown, .stRadio label {
+        color: #f1f5f9 !important;
+        font-size: 1.05rem;
     }
     .stButton>button {
-        background: linear-gradient(90deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
-        color: white;
-        border-radius: 12px;
-        padding: 0.6rem 1.4rem;
+        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
+        color: #ffffff !important;
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
         font-weight: 700;
-        border: none;
-        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+        box-shadow: 0 6px 25px rgba(236, 72, 153, 0.6);
     }
-    div.stMarkdown p {
-        color: #e2e8f0;
+    .stTextInput input, .stSelectbox, .stSlider {
+        background-color: rgba(30, 41, 59, 0.8) !important;
+        color: #ffffff !important;
+        border-radius: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -67,11 +75,10 @@ if api_key:
 # Robust multi-tier fallback model executor
 def generate_response(prompt_text):
     if not client:
-        return "Error: API client not initialized. Please input your Gemini API Key."
+        return "Error: API client not initialized. Please input your Gemini API Key in the sidebar."
     
     models_to_try = [
         "gemini-2.5-flash", 
-        "gemini-2.5-flash-lite", 
         "gemini-1.5-flash", 
         "gemini-1.5-pro"
     ]
@@ -86,7 +93,7 @@ def generate_response(prompt_text):
         except Exception:
             continue
             
-    return "Error: Network traffic overload on free endpoints. Please wait 10 seconds and click run again."
+    return "Error: Endpoint temporarily busy. Please click 'Run' again in a few seconds."
 
 # --- SECTION 1: NEURAL RESEARCH TUTOR ---
 if app_mode == "🤖 Neural Research Tutor":
@@ -128,13 +135,13 @@ elif app_mode == "⚡ Advanced Research Labs":
     st.write("Perform high-fidelity computational simulations mirroring university-level experimental environments.")
 
     lab_tab = st.tabs([
-        "⚛️ Physics: Quantum Harmonic Oscillator", 
-        "⚗️ Chemistry: Arrhenius Chemical Kinetics", 
-        "💻 Computer Science: Graph Pathfinding Engine", 
-        "📐 Mathematics: Taylor Series Expansion Solver"
+        "⚛️ Physics: Quantum Oscillator", 
+        "⚗️ Chemistry: Arrhenius Kinetics", 
+        "💻 Computer Science: Graph Pathfinding", 
+        "📐 Mathematics: Taylor Series"
     ])
 
-    # PHYSICS LAB: Quantum Harmonic Oscillator Wavefunction
+    # PHYSICS LAB
     with lab_tab[0]:
         st.subheader("Physics Lab: Quantum Harmonic Oscillator Wavefunction")
         st.markdown("Simulate probability density distributions $|\psi_n(x)|^2$ for quantum states in a parabolic potential well.")
@@ -144,7 +151,6 @@ elif app_mode == "⚡ Advanced Research Labs":
         
         if st.button("Simulate Wavefunction Collapse"):
             x = np.linspace(-5, 5, 400)
-            # Hermite polynomial approximations for visualization curves
             if n_state == 0:
                 psi = np.exp(-0.5 * omega * x**2)
             elif n_state == 1:
@@ -164,7 +170,7 @@ elif app_mode == "⚡ Advanced Research Labs":
             st.line_chart(df_quantum, x="Spatial Coordinate (x)")
             st.success(f"Successfully computed eigenstate {n_state} probability distribution field.")
 
-    # CHEMISTRY LAB: Chemical Kinetics & Activation Energy
+    # CHEMISTRY LAB
     with lab_tab[1]:
         st.subheader("Chemistry Lab: Arrhenius Rate Constant & Temperature Profiler")
         st.markdown("Model temperature dependence of reaction velocity constants using the Arrhenius equation: $k = A e^{-E_a / (RT)}$")
@@ -176,10 +182,8 @@ elif app_mode == "⚡ Advanced Research Labs":
             freq_factor = st.slider("Pre-Exponential Factor ($\ln(A)$)", 5.0, 25.0, 15.0)
             
         if st.button("Run Thermal Kinetics Simulation"):
-            R = 8.314 / 1000 # kJ/(mol·K)
-            temp_range = np.linspace(273, 600, 100) # Kelvin
-            
-            # k = exp(lnA - Ea / (R * T))
+            R = 8.314 / 1000
+            temp_range = np.linspace(273, 600, 100)
             ln_k = freq_factor - (ea / (R * temp_range))
             
             df_kinetics = pd.DataFrame({
@@ -189,7 +193,7 @@ elif app_mode == "⚡ Advanced Research Labs":
             st.line_chart(df_kinetics, x="Temperature (K)", y="Natural Log Rate Constant ln(k)")
             st.info("Plotted Arrhenius linear dependency modeling thermal barrier crossing thresholds.")
 
-    # COMPUTER SCIENCE LAB: Graph Traversal Complexity
+    # COMPUTER SCIENCE LAB
     with lab_tab[2]:
         st.subheader("Computer Science Lab: BFS vs DFS Graph Pathfinding Simulation")
         st.markdown("Analyze traversal performance and memory footprint scaling across deep node hierarchies.")
@@ -197,7 +201,6 @@ elif app_mode == "⚡ Advanced Research Labs":
         nodes_count = st.slider("Graph Vertex Density ($V$)", 100, 5000, 1000)
         
         if st.button("Execute Graph Benchmark"):
-            # Simulate comparative metrics
             bfs_time = nodes_count * 0.0015 + random.uniform(0.1, 0.5)
             dfs_time = nodes_count * 0.0011 + random.uniform(0.05, 0.3)
             
@@ -208,7 +211,7 @@ elif app_mode == "⚡ Advanced Research Labs":
             st.bar_chart(df_graph, x="Traversal Algorithm", y="Search Latency (Milliseconds)")
             st.success(f"Benchmark completed for graph architecture containing {nodes_count} vertices.")
 
-    # MATHEMATICS LAB: Taylor Series Convergence
+    # MATHEMATICS LAB
     with lab_tab[3]:
         st.subheader("Mathematics Lab: Taylor Series Polynomial Approximation Engine")
         st.markdown("Analyze convergence limits of Maclaurin polynomial expansions for transcendental functions like $e^x$.")
@@ -218,10 +221,7 @@ elif app_mode == "⚡ Advanced Research Labs":
         if st.button("Compute Series Expansion"):
             x_vals = np.linspace(-3, 3, 200)
             exact_y = np.exp(x_vals)
-            
-            # Taylor series approximation for e^x = sum(x^n / n!)
             approx_y = np.zeros_like(x_vals)
-            import math
             for n in range(terms):
                 approx_y += (x_vals**n) / math.factorial(n)
                 
@@ -231,7 +231,7 @@ elif app_mode == "⚡ Advanced Research Labs":
                 f"Taylor Polynomial Approximation (N={terms})": approx_y
             })
             st.line_chart(df_taylor, x="x")
-            st.success("Taylor series convergence computed. Notice how higher order terms match exponential growth curvature.")
+            st.success("Taylor series convergence computed successfully.")
 
 # --- SECTION 3: EXPERT ASSESSMENT SUITE ---
 elif app_mode == "🏆 Expert Assessment Suite":
