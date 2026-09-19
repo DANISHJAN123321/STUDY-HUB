@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import math
 import random
+import time
 
 # Page Configuration
 st.set_page_config(
@@ -12,41 +13,45 @@ st.set_page_config(
     layout="wide"
 )
 
-# High-Contrast Professional & Vibrant CSS Theme
+# High-Contrast Universal Colorful CSS Theme (Zero Grey Text)
 st.markdown("""
 <style>
     .stApp {
-        background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
-        color: #f8fafc;
+        background: linear-gradient(135deg, #090d16 0%, #111827 50%, #1f1135 100%);
+        color: #ffffff !important;
     }
     h1, h2, h3, h4 {
-        color: #38bdf8 !important;
+        color: #00f2fe !important;
         font-family: 'Inter', 'Segoe UI', sans-serif;
-        font-weight: 700;
+        font-weight: 800;
         letter-spacing: -0.5px;
     }
-    p, span, label, .stMarkdown, .stRadio label {
-        color: #f1f5f9 !important;
-        font-size: 1.05rem;
+    p, span, label, div, .stMarkdown, .stMarkdown p, .stRadio label, .stCheckbox label, .stSelectbox label {
+        color: #ffffff !important;
+        font-size: 1.05rem !important;
     }
     .stButton>button {
-        background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
+        background: linear-gradient(135deg, #fe0072 0%, #7f00ff 50%, #00f2fe 100%);
         color: #ffffff !important;
-        border-radius: 10px;
-        padding: 0.6rem 1.5rem;
-        font-weight: 700;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        border-radius: 12px;
+        padding: 0.65rem 1.6rem;
+        font-weight: 800;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 242, 254, 0.4);
         transition: all 0.3s ease;
     }
     .stButton>button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 25px rgba(236, 72, 153, 0.6);
+        box-shadow: 0 6px 25px rgba(254, 0, 114, 0.6);
     }
-    .stTextInput input, .stSelectbox, .stSlider {
-        background-color: rgba(30, 41, 59, 0.8) !important;
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+        background-color: #1e293b !important;
         color: #ffffff !important;
+        border: 1px solid #00f2fe !important;
         border-radius: 8px;
+    }
+    .stChatMessage p {
+        color: #ffffff !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -72,7 +77,7 @@ if api_key:
     except Exception as e:
         st.error(f"Failed to initialize client: {e}")
 
-# Robust multi-tier fallback model executor
+# Robust multi-tier fallback model executor with automatic retries
 def generate_response(prompt_text):
     if not client:
         return "Error: API client not initialized. Please input your Gemini API Key in the sidebar."
@@ -83,17 +88,20 @@ def generate_response(prompt_text):
         "gemini-1.5-pro"
     ]
     
-    for m in models_to_try:
-        try:
-            response = client.models.generate_content(
-                model=m,
-                contents=prompt_text,
-            )
-            return response.text
-        except Exception:
-            continue
+    # Automatic retry loop to handle temporary traffic spikes smoothly
+    for attempt in range(3):
+        for m in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=m,
+                    contents=prompt_text,
+                )
+                return response.text
+            except Exception:
+                continue
+        time.sleep(1.5) # Short wait before retrying models
             
-    return "Error: Endpoint temporarily busy. Please click 'Run' again in a few seconds."
+    return "Error: Endpoints are heavily loaded right now. Please wait 10 seconds and try your request again."
 
 # --- SECTION 1: NEURAL RESEARCH TUTOR ---
 if app_mode == "🤖 Neural Research Tutor":
@@ -123,7 +131,7 @@ if app_mode == "🤖 Neural Research Tutor":
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.spinner("Executing academic synthesis..."):
+                with st.spinner("Executing academic synthesis with auto-retry logic..."):
                     context_prompt = f"Act as a distinguished Chair Professor of {subject}. Provide an exhaustive, rigorous academic breakdown including formal definitions, mathematical proofs or system architectures, edge-cases, and real-world synthesis:\n\n{prompt}"
                     answer = generate_response(context_prompt)
                     st.markdown(answer)
@@ -243,7 +251,7 @@ elif app_mode == "🏆 Expert Assessment Suite":
 
     if st.button("Generate Comprehensive Examination"):
         if client:
-            with st.spinner("Synthesizing complex multi-variable exam parameters..."):
+            with st.spinner("Synthesizing complex multi-variable exam parameters with auto-retry..."):
                 prompt = f"Design an advanced examination containing 3 intricate multi-part problems for {eval_field} at a {complexity} standard. Provide complete mathematical equations, theoretical contexts, and exhaustive step-by-step solution keys."
                 exam_payload = generate_response(prompt)
                 st.session_state['exam_output'] = exam_payload
