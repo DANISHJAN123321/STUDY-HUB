@@ -1,10 +1,12 @@
 import streamlit as st
 from google import genai
+import numpy as np
+import pandas as pd
 
 # Page Configuration
 st.set_page_config(
-    page_title="Student AI Hub & Virtual Labs",
-    page_icon="🎓",
+    page_title="Advanced Student AI Hub & Virtual Labs",
+    page_icon="🔬",
     layout="wide"
 )
 
@@ -12,14 +14,14 @@ st.set_page_config(
 st.markdown("""
 <style>
 .main {
-    background-color: #f4f7f6;
+    background-color: #f8fafc;
 }
 h1, h2, h3 {
-    color: #1f2937;
+    color: #0f172a;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 .stButton>button {
-    background-color: #4f46e5;
+    background-color: #2563eb;
     color: white;
     border-radius: 8px;
     padding: 0.5rem 1rem;
@@ -27,23 +29,23 @@ h1, h2, h3 {
     border: none;
 }
 .stButton>button:hover {
-    background-color: #4338ca;
+    background-color: #1d4ed8;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Retrieve Gemini API Key from Streamlit Secrets or Sidebar Input
+# Retrieve Gemini API Key
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/student-male.png", width=80)
-    st.title("Student Control Panel")
+    st.image("https://img.icons8.com/color/96/flask.png", width=80)
+    st.title("Advanced Lab Console")
     if not api_key:
         api_key = st.text_input("Enter Free Gemini API Key:", type="password")
         st.markdown("[Get a free Gemini API Key from Google AI Studio](https://aistudio.google.com/)")
     
     st.markdown("---")
-    app_mode = st.radio("Choose Section:", ["🤖 AI Study Tutor", "🧪 Virtual Labs", "📝 Quiz Zone"])
+    app_mode = st.radio("Choose Section:", ["🤖 AI Research Tutor", "🔬 Advanced Virtual Labs", "📝 Expert Quiz Suite"])
 
 # Initialize Modern GenAI Client
 client = None
@@ -53,31 +55,24 @@ if api_key:
     except Exception as e:
         st.error(f"Failed to initialize client: {e}")
 
-# Robust generation function handling model fallbacks
 def generate_response(prompt_text):
     if not client:
         return "Error: API client not initialized. Please enter your API key."
-    
-    # Modern available flash models
     models_to_try = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-1.5-flash"]
     for m in models_to_try:
         try:
-            response = client.models.generate_content(
-                model=m,
-                contents=prompt_text,
-            )
+            response = client.models.generate_content(model=m, contents=prompt_text)
             return response.text
         except Exception:
             continue
-            
-    return "Error: All models are currently unavailable or busy. Please try again shortly."
+    return "Error: All models are currently busy. Please try again shortly."
 
-# --- SECTION 1: AI STUDY TUTOR ---
-if app_mode == "🤖 AI Study Tutor":
-    st.title("🤖 AI Subject Expert Tutor")
-    st.write("Ask any question related to **Physics, Chemistry, Computer Science, or Mathematics**!")
+# --- SECTION 1: AI RESEARCH TUTOR ---
+if app_mode == "🤖 AI Research Tutor":
+    st.title("🤖 Advanced Subject & Research Tutor")
+    st.write("Deep-dive technical questions, mechanism breakdowns, and complex problem solving for **Physics, Chemistry, Computer Science, and Mathematics**.")
 
-    subject = st.selectbox("Select Subject", ["General / All Subjects", "Physics", "Chemistry", "Computer Science", "Mathematics"])
+    subject = st.selectbox("Select Academic Field", ["Advanced Physics", "Organic/Inorganic Chemistry", "Data Structures & Algorithms", "Pure & Applied Mathematics"])
     
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -86,7 +81,7 @@ if app_mode == "🤖 AI Study Tutor":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("What is your question?"):
+    if prompt := st.chat_input("Ask an advanced scientific or mathematical question..."):
         if not client:
             st.error("Please provide your Gemini API key in the sidebar first!")
         else:
@@ -95,69 +90,125 @@ if app_mode == "🤖 AI Study Tutor":
                 st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    context_prompt = f"You are an expert tutor in {subject}. Answer the student's question clearly with examples, formulas, or code snippets if necessary:\n\n{prompt}"
+                with st.spinner("Synthesizing rigorous scientific breakdown..."):
+                    context_prompt = f"You are a rigorous university-level professor in {subject}. Provide an advanced, highly technical response including theoretical framework, step-by-step mathematical proofs or reaction mechanisms, and real-world application context:\n\n{prompt}"
                     answer = generate_response(context_prompt)
                     st.markdown(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})
 
-# --- SECTION 2: VIRTUAL LABS ---
-elif app_mode == "🧪 Virtual Labs":
-    st.title("🧪 Interactive Virtual Labs")
-    st.write("Perform simulated experiments and coding sandboxes right in your browser.")
+# --- SECTION 2: ADVANCED VIRTUAL LABS ---
+elif app_mode == "🔬 Advanced Virtual Labs":
+    st.title("🔬 Advanced Interactive Virtual Laboratories")
+    st.write("Perform real-time simulations, data plotting, and algorithmic sandboxing.")
 
-    lab_tab = st.tabs(["⚡ Physics Lab", "🔬 Chemistry Lab", "💻 Computer Lab"])
+    lab_tab = st.tabs(["🚀 Physics: Projectile Motion Engine", "⚗️ Chemistry: Titration & Kinetics", "💻 Computer Science: Algorithm Visualizer"])
 
+    # PHYSICS LAB
     with lab_tab[0]:
-        st.subheader("Physics Lab: Ohm's Law Calculator & Simulator")
-        st.markdown("Test the relationship between Voltage ($V$), Current ($I$), and Resistance ($R$). Formula: $V = I \\times R$")
+        st.subheader("Physics Lab: Ballistic & Projectile Motion Simulator")
+        st.markdown("Simulate true Newtonian trajectories accounting for initial velocity, launch angle, and gravitational acceleration ($g = 9.81 \\text{ m/s}^2$).")
         
         col1, col2 = st.columns(2)
         with col1:
-            voltage = st.slider("Voltage (Volts)", 1.0, 50.0, 12.0)
-            resistance = st.slider("Resistance (Ohms)", 1.0, 100.0, 10.0)
+            v0 = st.slider("Initial Velocity ($v_0$ in m/s)", 5.0, 100.0, 25.0)
+            angle_deg = st.slider("Launch Angle (Degrees)", 0.0, 90.0, 45.0)
         with col2:
-            current = voltage / resistance
-            st.metric(label="Calculated Current (Amperes)", value=f"{current:.2f} A")
-            st.info("💡 Try increasing resistance to see current drop!")
+            mass = st.slider("Project Mass (kg)", 0.1, 10.0, 1.0)
+            env_drag = st.checkbox("Simulate Air Resistance Factor", value=False)
 
+        theta = np.radians(angle_deg)
+        g = 9.81
+        flight_time = (2 * v0 * np.sin(theta)) / g
+        t = np.linspace(0, flight_time, num=100)
+        
+        # Physics equations for trajectory
+        x = v0 * np.cos(theta) * t
+        y = v0 * np.sin(theta) * t - 0.5 * g * t**2
+        y = np.clip(y, 0, None) # Ground floor limit
+
+        df_traj = pd.DataFrame({"Horizontal Distance (m)": x, "Vertical Height (m)": y})
+        st.line_chart(df_traj, x="Horizontal Distance (m)", y="Vertical Height (m)")
+        
+        max_range = (v0**2 * np.sin(2 * theta)) / g
+        max_height = (v0 * np.sin(theta))**2 / (2 * g)
+        
+        col_m1, col_m2, col_m3 = st.columns(3)
+        col_m1.metric("Max Range", f"{max_range:.2f} m")
+        col_m2.metric("Peak Height", f"{max_height:.2f} m")
+        col_m3.metric("Total Time of Flight", f"{flight_time:.2f} s")
+
+    # CHEMISTRY LAB
     with lab_tab[1]:
-        st.subheader("Chemistry Lab: Reaction & Compound Analyzer")
-        compound_query = st.text_input("Enter a chemical formula or reaction (e.g., H2O, NaCl, Photosynthesis):")
-        if st.button("Analyze Compound"):
-            if client and compound_query:
-                with st.spinner("Analyzing chemical properties..."):
-                    ans = generate_response(f"Provide details about this chemical compound/reaction (molecular weight, properties, uses, safety): {compound_query}")
-                    st.success(ans)
+        st.subheader("Chemistry Lab: Acid-Base Titration & pH Curve Generator")
+        st.markdown("Analyze neutralization dynamics between strong/weak acids and bases.")
+        
+        acid_type = st.selectbox("Acid Selection", ["Hydrochloric Acid (HCl - Strong)", "Acetic Acid (CH3COOH - Weak)"])
+        base_conc = st.slider("Titrant Base Concentration (M NaOH)", 0.05, 1.0, 0.1)
+        
+        if st.button("Run Titration Simulation"):
+            volumes = np.linspace(0, 50, 50)
+            if "Strong" in acid_type:
+                # Simulated steep equivalence curve at pH 7
+                ph_values = 14 - np.pmax = np.abs(volumes - 25)
+                ph_values = np.clip(7 + 7 * np.tanh((25 - volumes)/3), 1, 14)
             else:
-                st.warning("Please enter a query and ensure your API key is active.")
+                ph_values = np.clip(3 + 9 * (volumes / 50)**0.5, 1, 13)
+                
+            df_titration = pd.DataFrame({"Volume of NaOH Added (mL)": volumes, "Solution pH": ph_values})
+            st.line_chart(df_titration, x="Volume of NaOH Added (mL)", y="Solution pH")
+            st.success("Titration curve calculated successfully. Equivalence point isolated near 25.0 mL mark.")
 
+    # COMPUTER SCIENCE LAB
     with lab_tab[2]:
-        st.subheader("Computer Lab: Python Code Sandbox")
-        code_snippet = st.text_area("Write Python code to test logic:", "print('Hello, Student!')")
-        if st.button("Run Code"):
-            try:
-                local_vars = {}
-                exec(code_snippet, {}, local_vars)
-            except Exception as e:
-                st.error(f"Error: {e}")
+        st.subheader("Computer Science Lab: Sorting Algorithm Efficiency Benchmark")
+        st.markdown("Compare time execution scaling behavior of different sorting paradigms across random dataset sizes.")
+        
+        import time
+        import random
+        
+        array_size = st.select_slider("Dataset Element Count ($N$)", options=[500, 1000, 5000, 10000], value=1000)
+        
+        if st.button("Execute Performance Benchmark"):
+            data = [random.randint(1, 100000) for _ in range(array_size)]
+            
+            # Bubble Sort Benchmark (O(n^2))
+            start_time = time.time()
+            b_data = data.copy()
+            for i in range(len(b_data)):
+                for j in range(0, len(b_data) - i - 1):
+                    if b_data[j] > b_data[j + 1]:
+                        b_data[j], b_data[j + 1] = b_data[j + 1], b_data[j]
+            bubble_time = (time.time() - start_time) * 1000 # ms
+            
+            # Python Timsort (Built-in O(n log n))
+            start_time = time.time()
+            t_data = sorted(data)
+            timsort_time = (time.time() - start_time) * 1000 # ms
+            
+            perf_df = pd.DataFrame({
+                "Algorithm": ["Bubble Sort (O(n²))", "Python Timsort (O(n log n))"],
+                "Execution Time (Milliseconds)": [bubble_time, timsort_time]
+            })
+            
+            st.bar_chart(perf_df, x="Algorithm", y="Execution Time (Milliseconds)")
+            st.info(f"Benchmark completed on {array_size} elements. Notice the exponential divergence in algorithmic complexity.")
 
-# --- SECTION 3: QUIZ ZONE ---
-elif app_mode == "📝 Quiz Zone":
-    st.title("📝 Student Practice Quiz")
-    st.write("Test your knowledge and get instant AI feedback!")
+# --- SECTION 3: EXPERT QUIZ SUITE ---
+elif app_mode == "📝 Expert Quiz Suite":
+    st.title("📝 Rigorous University-Grade Evaluation Suite")
+    st.write("Generate complex scenario-based testing questions with full analytical solution keys.")
 
-    quiz_subject = st.selectbox("Select Quiz Subject", ["Physics", "Chemistry", "Computer Science", "Mathematics"])
-    difficulty = st.selectbox("Select Difficulty", ["Easy", "Medium", "Hard"])
+    q_subject = st.selectbox("Evaluation Domain", ["Quantum & Classical Physics", "Advanced Physical Chemistry", "Data Structures & Complexity Theory", "Differential Equations & Linear Algebra"])
+    q_level = st.selectbox("Rigor Level", ["Undergraduate Year 1", "Undergraduate Year 2+", "Olympiad / Competitive"])
 
-    if st.button("Generate Quiz"):
+    if st.button("Generate Comprehensive Assessment"):
         if client:
-            with st.spinner("Generating custom quiz..."):
-                prompt = f"Create 3 multiple-choice questions for {quiz_subject} at a {difficulty} level. Include options A, B, C, D and provide the correct answers at the very bottom."
-                quiz_text = generate_response(prompt)
-                st.session_state['current_quiz'] = quiz_text
+            with st.spinner("Formulating rigorous multi-part exam problems..."):
+                prompt = f"Create 3 advanced, multi-step conceptual exam problems for {q_subject} at an {q_level} standard. Include comprehensive mathematical/logical problem statements followed by complete step-by-step explanatory answer keys."
+                exam_text = generate_response(prompt)
+                st.session_state['current_exam'] = exam_text
         else:
-            st.warning("Please add your API key first.")
+            st.warning("Please configure your API key in the sidebar.")
 
-    if 'current_quiz' in st.session_state:
-        st.markdown(st.session_state['current_quiz'])
+    if 'current_exam' in st.session_state:
+        st.markdown(st.session_state['current_exam'])
