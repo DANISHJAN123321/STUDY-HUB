@@ -101,7 +101,12 @@ elif app_mode == "🔬 Advanced Virtual Labs":
     st.title("🔬 Advanced Interactive Virtual Laboratories")
     st.write("Perform real-time simulations, data plotting, and algorithmic sandboxing.")
 
-    lab_tab = st.tabs(["🚀 Physics: Projectile Motion Engine", "⚗️ Chemistry: Titration & Kinetics", "💻 Computer Science: Algorithm Visualizer"])
+    lab_tab = st.tabs([
+        "🚀 Physics Lab", 
+        "⚗️ Chemistry Lab", 
+        "💻 Computer Science Lab", 
+        "📈 Mathematics Calculus Lab"
+    ])
 
     # PHYSICS LAB
     with lab_tab[0]:
@@ -121,10 +126,9 @@ elif app_mode == "🔬 Advanced Virtual Labs":
         flight_time = (2 * v0 * np.sin(theta)) / g
         t = np.linspace(0, flight_time, num=100)
         
-        # Physics equations for trajectory
         x = v0 * np.cos(theta) * t
         y = v0 * np.sin(theta) * t - 0.5 * g * t**2
-        y = np.clip(y, 0, None) # Ground floor limit
+        y = np.clip(y, 0, None)
 
         df_traj = pd.DataFrame({"Horizontal Distance (m)": x, "Vertical Height (m)": y})
         st.line_chart(df_traj, x="Horizontal Distance (m)", y="Vertical Height (m)")
@@ -148,9 +152,7 @@ elif app_mode == "🔬 Advanced Virtual Labs":
         if st.button("Run Titration Simulation"):
             volumes = np.linspace(0, 50, 50)
             if "Strong" in acid_type:
-                # Simulated steep equivalence curve at pH 7
-                ph_values = 14 - np.pmax = np.abs(volumes - 25)
-                ph_values = np.clip(7 + 7 * np.tanh((25 - volumes)/3), 1, 14)
+                ph_values = np.clip(7 + 7 * np.tanh((25 - volumes) / 3), 1, 14)
             else:
                 ph_values = np.clip(3 + 9 * (volumes / 50)**0.5, 1, 13)
                 
@@ -171,19 +173,17 @@ elif app_mode == "🔬 Advanced Virtual Labs":
         if st.button("Execute Performance Benchmark"):
             data = [random.randint(1, 100000) for _ in range(array_size)]
             
-            # Bubble Sort Benchmark (O(n^2))
             start_time = time.time()
             b_data = data.copy()
             for i in range(len(b_data)):
                 for j in range(0, len(b_data) - i - 1):
                     if b_data[j] > b_data[j + 1]:
                         b_data[j], b_data[j + 1] = b_data[j + 1], b_data[j]
-            bubble_time = (time.time() - start_time) * 1000 # ms
+            bubble_time = (time.time() - start_time) * 1000
             
-            # Python Timsort (Built-in O(n log n))
             start_time = time.time()
             t_data = sorted(data)
-            timsort_time = (time.time() - start_time) * 1000 # ms
+            timsort_time = (time.time() - start_time) * 1000
             
             perf_df = pd.DataFrame({
                 "Algorithm": ["Bubble Sort (O(n²))", "Python Timsort (O(n log n))"],
@@ -192,6 +192,50 @@ elif app_mode == "🔬 Advanced Virtual Labs":
             
             st.bar_chart(perf_df, x="Algorithm", y="Execution Time (Milliseconds)")
             st.info(f"Benchmark completed on {array_size} elements. Notice the exponential divergence in algorithmic complexity.")
+
+    # MATHEMATICS CALCULUS LAB (NEW)
+    with lab_tab[3]:
+        st.subheader("Mathematics Lab: Differential Calculus & Derivative Plotter")
+        st.markdown("Visualize functions $f(x)$ alongside their numerical first derivatives $f'(x)$ using central difference approximation.")
+
+        math_func_choice = st.selectbox("Select Function to Differentiate", [
+            "Cubic Polynomial: f(x) = x³ - 3x² + 2",
+            "Trigonometric: f(x) = sin(x)",
+            "Exponential: f(x) = e^(-0.2x) * cos(x)"
+        ])
+
+        x_range = st.slider("Domain Span ($x$ bounds)", 1.0, 20.0, 10.0)
+        
+        if st.button("Compute Derivative & Plot Curve"):
+            x = np.linspace(-x_range, x_range, 400)
+            
+            if "Cubic" in math_func_choice:
+                y = x**3 - 3*x**2 + 2
+                name = "x³ - 3x² + 2"
+            elif "Trigonometric" in math_func_choice:
+                y = np.sin(x)
+                name = "sin(x)"
+            else:
+                y = np.exp(-0.2 * x) * np.cos(x)
+                name = "e^(-0.2x) * cos(x)"
+
+            # Numerical derivative using central difference method: f'(x) ≈ (f(x+h) - f(x-h)) / (2*h)
+            h = 1e-5
+            if "Cubic" in math_func_choice:
+                y_prime = ((x+h)**3 - 3*(x+h)**2 + 2) - ((x-h)**3 - 3*(x-h)**2 + 2) / (2*h)
+            elif "Trigonometric" in math_func_choice:
+                y_prime = (np.sin(x + h) - np.sin(x - h)) / (2 * h)
+            else:
+                y_prime = (np.exp(-0.2*(x+h))*np.cos(x+h) - np.exp(-0.2*(x-h))*np.cos(x-h)) / (2 * h)
+
+            df_calculus = pd.DataFrame({
+                "x": x,
+                f"Original Function f(x) [{name}]": y,
+                "First Derivative f'(x)": y_prime
+            })
+
+            st.line_chart(df_calculus, x="x")
+            st.success("Calculus differentiation computed successfully across domain spectrum.")
 
 # --- SECTION 3: EXPERT QUIZ SUITE ---
 elif app_mode == "📝 Expert Quiz Suite":
