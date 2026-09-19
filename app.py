@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
 # Page Configuration
 st.set_page_config(
@@ -9,11 +9,13 @@ st.set_page_config(
 )
 
 # Load Custom CSS
-with open("style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+try:
+    with open("style.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+except FileNotFoundError:
+    pass
 
-# Configure Gemini API
-# It will pull from Streamlit Secrets or let user input it in the sidebar
+# Configure Gemini Client using modern google-genai SDK
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 
 with st.sidebar:
@@ -26,12 +28,12 @@ with st.sidebar:
     st.markdown("---")
     app_mode = st.radio("Choose Section:", ["🤖 AI Study Tutor", "🧪 Virtual Labs", "📝 Quiz Zone"])
 
+client = None
 if api_key:
-    genai.configure(api_key=api_key)
-    # Using the standard lightweight and fast model
-    model = genai.GenerativeModel("gemini-1.5-flash")
-else:
-    model = None
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        st.error(f"Failed to initialize client: {e}")
 
 # --- SECTION 1: AI STUDY TUTOR ---
 if app_mode == "🤖 AI Study Tutor":
@@ -48,7 +50,7 @@ if app_mode == "🤖 AI Study Tutor":
             st.markdown(message["content"])
 
     if prompt := st.chat_input("What is your question?"):
-        if not model:
+        if not client:
             st.error("Please provide your Gemini API key in the sidebar first!")
         else:
             st.session_state.messages.append({"role": "user", "content": prompt})
@@ -57,10 +59,18 @@ if app_mode == "🤖 AI Study Tutor":
 
             with st.chat_message("assistant"):
                 with st.spinner("Thinking..."):
-                    context_prompt = f"You are an expert tutor in {subject}. Answer the student's question clearly with examples, formulas, or code snippets if necessary:\n\n{prompt}"
-                    response = model.generate_content(context_prompt)
-                    st.markdown(response.text)
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                    try:
+                        context_prompt = f"You are an expert tutor in {subject}. Answer the student's question clearly with examples, formulas, or code snippets if necessary:\n\n{prompt}"
+                        
+                        # Updated to use the standard Gemini Flash model
+                        response = client.models.generate_content(
+                            model="gemini-3.8-flash",
+                            contents=context_prompt,
+                        )
+                        st.markdown(response.text)
+                        st.session_state.messages.append({"role": "assistant", "content": response.text})
+                    except Exception as e:
+                        st.error(f"API Error: {e}")
 
 # --- SECTION 2: VIRTUAL LABS ---
 elif app_mode == "🧪 Virtual Labs":
@@ -86,10 +96,16 @@ elif app_mode == "🧪 Virtual Labs":
         st.subheader("Chemistry Lab: Reaction & Compound Analyzer")
         compound_query = st.text_input("Enter a chemical formula or reaction (e.g., H2O, NaCl, Photosynthesis):")
         if st.button("Analyze Compound"):
-            if model and compound_query:
+            if client and compound_query:
                 with st.spinner("Analyzing chemical properties..."):
-                    res = model.generate_content(f"Provide details about this chemical compound/reaction (molecular weight, properties, uses, safety): {compound_query}")
-                    st.success(res.text)
+                    try:
+                        res = client.models.generate_content(
+                            model="gemini-3.8-flash",
+                            contents=f"Provide details about this chemical compound/reaction (molecular weight, properties, uses, safety): {compound_query}"
+                        )
+                        st.success(res.text)
+                    except Exception as e:
+                        st.error(f"API Error: {e}")
             else:
                 st.warning("Please enter a query and ensure your API key is active.")
 
@@ -98,7 +114,6 @@ elif app_mode == "🧪 Virtual Labs":
         code_snippet = st.text_area("Write Python code to test logic:", "print('Hello, Student!')")
         if st.button("Run Code"):
             try:
-                # Safe execution wrapper for basic math/strings
                 local_vars = {}
                 exec(code_snippet, {}, local_vars)
             except Exception as e:
@@ -113,11 +128,17 @@ elif app_mode == "📝 Quiz Zone":
     difficulty = st.selectbox("Select Difficulty", ["Easy", "Medium", "Hard"])
 
     if st.button("Generate Quiz"):
-        if model:
+        if client:
             with st.spinner("Generating custom quiz..."):
-                prompt = f"Create 3 multiple-choice questions for {quiz_subject} at a {difficulty} level. Include options A, B, C, D and provide the correct answers at the very bottom."
-                quiz_res = model.generate_content(prompt)
-                st.session_state['current_quiz'] = quiz_res.text
+                try:
+                    prompt = f"Create 3 multiple-choice questions for {quiz_subject} at a {difficulty} level. Include options A, B, C, D and provide the correct answers at the very bottom."
+                    quiz_res = client.models.generate_content(
+                        model="gemini-3.8-flash",
+                        contents=prompt
+                    )
+                    st.session_state['current_quiz'] = quiz_res.text
+                except Exception as e:
+                    st.error(f"API Error: {e}")
         else:
             st.warning("Please add your API key first.")
 
